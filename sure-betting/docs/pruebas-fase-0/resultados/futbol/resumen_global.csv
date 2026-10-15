@@ -1,0 +1,9 @@
+mercado,partidos,pct_S<1,"pct_S<0.99 (>=1,01% retorno)","pct_S<0.98 (>=2,04% retorno)","pct_S<0.95 (>=5,26% retorno; sospechoso)",mediana_S
+1X2 todas las ligas,211210,22.67,9.02,3.89,0.514,1.0101
+"O/U 2,5 todas las ligas",156686,4.71,1.0,0.3,0.051,1.0179
+1X2 LaLiga,7631,31.95,9.51,3.09,0.118,1.0045
+"O/U 2,5 LaLiga",7630,7.51,1.25,0.26,0.052,1.0135
+1X2 Premier League,8000,33.22,7.56,2.05,0.188,1.0037
+"O/U 2,5 Premier League",8000,7.28,1.26,0.36,0.15,1.013
+1X2 Segunda Division,9227,6.97,1.9,0.48,0.043,1.0165
+"O/U 2,5 Segunda Division",9225,3.02,0.7,0.29,0.065,1.0226

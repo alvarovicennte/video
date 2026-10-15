@@ -1,0 +1,55 @@
+== 1. Margen de un mercado 1.90 / 1.90
+suma probs implicitas 105.2632 % -> margen 5.26 %
+
+== 1b. Margen 1X2 de ejemplo 2.30 / 3.30 / 3.20
+probs implicitas [Decimal('43.48'), Decimal('30.30'), Decimal('31.25')] suma 105.03 margen 5.03
+prob 'justa' metodo proporcional [Decimal('41.40'), Decimal('28.85'), Decimal('29.75')]
+
+== 2. Surebet 2 vias: A 2.10 (casa X) / B 2.00 (casa Y), banca 100
+S 0.976190 retorno 2.439 % stakes [Decimal('48.78'), Decimal('51.22')] pago 102.44
+
+== 3. Surebet 1X2: 1 a 2.45 (X) / X a 3.60 (Y) / 2 a 3.40 (Z), banca 100
+S 0.980059 retorno 2.035 % stakes [Decimal('41.65'), Decimal('28.34'), Decimal('30.01')] pago 102.03
+
+== 4. Redondeo (2 vias, ideal 48.78 / 51.22)
+paso 0.01: redondeo simple [Decimal('48.78'), Decimal('51.22')] total 100.00 pagos [Decimal('102.44'), Decimal('102.44')] beneficio minimo 2.44 (2.44%)
+        optimo floor/ceil [Decimal('48.78'), Decimal('51.22')] total 100.00 pagos [Decimal('102.44'), Decimal('102.44')] beneficio minimo 2.44 (2.44%)
+paso 1: redondeo simple [Decimal('49'), Decimal('51')] total 100 pagos [Decimal('102.90'), Decimal('102.00')] beneficio minimo 2.00 (2.00%)
+        optimo floor/ceil [Decimal('49'), Decimal('51')] total 100 pagos [Decimal('102.90'), Decimal('102.00')] beneficio minimo 2.00 (2.00%)
+paso 5: redondeo simple [Decimal('50'), Decimal('50')] total 100 pagos [Decimal('105.00'), Decimal('100.00')] beneficio minimo 0.00 (0.00%)
+        optimo floor/ceil [Decimal('50'), Decimal('50')] total 100 pagos [Decimal('105.00'), Decimal('100.00')] beneficio minimo 0.00 (0.00%)
+
+== 4b. Redondeo 1X2 (ideal) [Decimal('41.65'), Decimal('28.34'), Decimal('30.01')]
+paso 1: simple [Decimal('42'), Decimal('28'), Decimal('30')] total 100 pagos [Decimal('102.90'), Decimal('100.80'), Decimal('102.00')] benef. min 0.80 (0.80%)
+        optimo [Decimal('41'), Decimal('28'), Decimal('30')] total 99 pagos [Decimal('100.45'), Decimal('100.80'), Decimal('102.00')] benef. min 1.45 (1.46%)
+paso 5: simple [Decimal('40'), Decimal('30'), Decimal('30')] total 100 pagos [Decimal('98.00'), Decimal('108.00'), Decimal('102.00')] benef. min -2.00 (-2.00%)
+        optimo [Decimal('45'), Decimal('30'), Decimal('35')] total 110 pagos [Decimal('110.25'), Decimal('108.00'), Decimal('119.00')] benef. min -2.00 (-1.82%)
+
+== 5. Comision exchange sobre ganancia neta: cuota efectiva = 1 + (o-1)(1-c)
+c=2%: back 2.10 -> efectiva 2.0780
+c=5%: back 2.10 -> efectiva 2.0450
+
+== 6. Back (casa) / Lay (exchange): B=2.20, L=2.10, back 100
+c=2%: lay stake 105.77 responsabilidad 116.35 | gana back: 3.65 | gana lay: 3.65 | ROI sobre back 3.65% | sobre capital inmovilizado (back+resp.) 1.69%
+        condicion de arbitraje B(1-c) > L-c : 2.1560 > 2.08 -> True
+c=5%: lay stake 107.32 responsabilidad 118.05 | gana back: 1.95 | gana lay: 1.95 | ROI sobre back 1.95% | sobre capital inmovilizado (back+resp.) 0.89%
+        condicion de arbitraje B(1-c) > L-c : 2.0900 > 2.05 -> True
+
+== 7. Cuota que cae tras colocar la primera pata (B colocada a 2.00 con 51.22)
+A cae a 2.10: stake A 48.78 total 100.00 resultado garantizado 2.44 (2.44%)
+A cae a 2.05: stake A 49.97 total 101.19 resultado garantizado 1.25 (1.23%)
+A cae a 2.02: stake A 50.71 total 101.93 resultado garantizado 0.51 (0.50%)
+A cae a 2.00: stake A 51.22 total 102.44 resultado garantizado 0.00 (0.00%)
+A cae a 1.95: stake A 52.53 total 103.75 resultado garantizado -1.31 (-1.27%)
+A cae a 1.90: stake A 53.92 total 105.14 resultado garantizado -2.70 (-2.56%)
+
+== 8. Anulacion asimetrica (tenis): A en X (anula si no se completa), B en Y (vale con 1 set)
+se retira A tras 1 set: X devuelve 48.78 ; Y paga B 102.44 -> neto 51.22
+se retira B tras 1 set: X devuelve 48.78 ; Y pierde B -> neto -51.22
+partido completado: neto 2.44 (minimo)
+
+== 9. Limite de apuesta: maximo 30 EUR aceptado en la pata A (2.10)
+banca maxima 61.50 stakes [Decimal('30.00'), Decimal('31.50')] beneficio 1.50
+
+== 10. Impuestos: retorno bruto 2,0% con tipo marginal IRPF 30% sobre ganancia neta anual
+retorno neto aprox. 1.40 %

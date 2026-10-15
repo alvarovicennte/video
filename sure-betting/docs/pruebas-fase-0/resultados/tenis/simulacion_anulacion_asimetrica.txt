@@ -1,0 +1,4 @@
+n= 50 surebets, p_retirada_con_set=2.27%: media   119.1 EUR | percentil 5    14.7 EUR | P(total<0) 1.2% | sin riesgo asimetrico: 122.0 EUR
+n= 50 surebets, p_retirada_con_set=2.91%: media   118.2 EUR | percentil 5    14.7 EUR | P(total<0) 2.1% | sin riesgo asimetrico: 122.0 EUR
+n=200 surebets, p_retirada_con_set=2.27%: media   476.7 EUR | percentil 5   312.4 EUR | P(total<0) 0.0% | sin riesgo asimetrico: 488.0 EUR
+n=200 surebets, p_retirada_con_set=2.91%: media   473.5 EUR | percentil 5   268.5 EUR | P(total<0) 0.0% | sin riesgo asimetrico: 488.0 EUR

@@ -1,0 +1,18 @@
+== Deportes (pesos: {'cobertura_gratuita': 20, 'calidad_y_emparejamiento': 15, 'simplicidad_liquidacion': 15, 'disponibilidad_en_casas_es': 10, 'historicos': 10, 'validable_sin_dinero': 10, 'riesgo_cuota_desactualizada': 10, 'pocos_resultados_a_cubrir': 10})
+4.30  Futbol prepartido  {'cobertura_gratuita': 5, 'calidad_y_emparejamiento': 4, 'simplicidad_liquidacion': 4, 'disponibilidad_en_casas_es': 5, 'historicos': 5, 'validable_sin_dinero': 4, 'riesgo_cuota_desactualizada': 3, 'pocos_resultados_a_cubrir': 4}
+3.15  Tenis prepartido  {'cobertura_gratuita': 3, 'calidad_y_emparejamiento': 3, 'simplicidad_liquidacion': 2, 'disponibilidad_en_casas_es': 4, 'historicos': 4, 'validable_sin_dinero': 3, 'riesgo_cuota_desactualizada': 2, 'pocos_resultados_a_cubrir': 5}
+3.15  Baloncesto prepartido  {'cobertura_gratuita': 3, 'calidad_y_emparejamiento': 4, 'simplicidad_liquidacion': 3, 'disponibilidad_en_casas_es': 4, 'historicos': 2, 'validable_sin_dinero': 2, 'riesgo_cuota_desactualizada': 3, 'pocos_resultados_a_cubrir': 4}
+2.05  Cualquier deporte en directo  {'cobertura_gratuita': 1, 'calidad_y_emparejamiento': 3, 'simplicidad_liquidacion': 2, 'disponibilidad_en_casas_es': 4, 'historicos': 1, 'validable_sin_dinero': 1, 'riesgo_cuota_desactualizada': 1, 'pocos_resultados_a_cubrir': 4}
+
+== Fuentes (pesos: {'coste': 25, 'cobertura': 20, 'fiabilidad': 20, 'facilidad_implementacion': 15, 'adecuacion_mercado_es': 20})
+4.00  Captura manual CSV de webs .es  {'coste': 5, 'cobertura': 1, 'fiabilidad': 4, 'facilidad_implementacion': 5, 'adecuacion_mercado_es': 5}
+3.95  Betfair Exchange ES clave retardada  {'coste': 5, 'cobertura': 3, 'fiabilidad': 4, 'facilidad_implementacion': 2, 'adecuacion_mercado_es': 5}
+3.80  The Odds API gratis (500 cr/mes)  {'coste': 5, 'cobertura': 3, 'fiabilidad': 4, 'facilidad_implementacion': 5, 'adecuacion_mercado_es': 2}
+3.80  Escaner comercial gratis (uso manual)  {'coste': 5, 'cobertura': 3, 'fiabilidad': 3, 'facilidad_implementacion': 5, 'adecuacion_mercado_es': 3}
+3.60  CSV historicos football/tennis-data  {'coste': 5, 'cobertura': 2, 'fiabilidad': 4, 'facilidad_implementacion': 5, 'adecuacion_mercado_es': 2}
+3.35  Betfair Exchange ES clave live (499 GBP)  {'coste': 1, 'cobertura': 4, 'fiabilidad': 5, 'facilidad_implementacion': 2, 'adecuacion_mercado_es': 5}
+3.25  The Odds API 20K (30 USD/mes)  {'coste': 2, 'cobertura': 4, 'fiabilidad': 4, 'facilidad_implementacion': 5, 'adecuacion_mercado_es': 2}
+3.25  API-Football gratis (100/dia)  {'coste': 5, 'cobertura': 2, 'fiabilidad': 3, 'facilidad_implementacion': 4, 'adecuacion_mercado_es': 2}
+3.25  Odds-API.io (de pago, versiones .es)  {'coste': 1, 'cobertura': 4, 'fiabilidad': 3, 'facilidad_implementacion': 4, 'adecuacion_mercado_es': 5}
+3.05  OddsPapi gratis (250/mes)  {'coste': 5, 'cobertura': 2, 'fiabilidad': 2, 'facilidad_implementacion': 4, 'adecuacion_mercado_es': 2}
+2.55  Scraping de webs .es (NO recomendado)  {'coste': 4, 'cobertura': 4, 'fiabilidad': 2, 'facilidad_implementacion': 1, 'adecuacion_mercado_es': 1}
