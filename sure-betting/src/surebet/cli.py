@@ -8,6 +8,12 @@ import typer
 
 from .engine import arb_math as m
 from . import testdata
+from .config import ConfigError, get_odds_api_key
+from .ingest import run_ingest
+from .providers import the_odds_api as t_api
+from .quota import BudgetError, known_remaining
+from .storage.db import connect
+import json as _json
 
 app = typer.Typer(add_completion=False, help="SURE BETTING (H1): calculadora verificable.")
 
@@ -85,6 +91,69 @@ def gen_test_data(
     """Genera cuotas inventadas con arbitrajes plantados y trampas (para pruebas)."""
     n = testdata.write_csv(salida, semilla, eventos)
     typer.echo(f"{n} filas escritas en {salida}. Son datos inventados, no reales.")
+
+
+
+def _api() -> t_api.TheOddsApi:
+    try:
+        return t_api.TheOddsApi(get_odds_api_key())
+    except ConfigError as e:
+        typer.echo(f"Error: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def sports(buscar: str = typer.Option("", help="Filtra por texto, ej: spain o soccer")):
+    """Lista los deportes/ligas que ofrece la API (no consume creditos segun su documentacion)."""
+    try:
+        r = _api().sports()
+    except t_api.SourceError as e:
+        typer.echo(f"Error: {e}")
+        raise typer.Exit(1)
+    if r.status != 200:
+        typer.echo(f"La API respondio HTTP {r.status}. Revisa la clave en .env.")
+        raise typer.Exit(1)
+    for s in _json.loads(r.body):
+        if buscar.lower() in (s["key"] + s.get("title", "")).lower():
+            typer.echo(f"{s['key']:40s} {s.get('title', '')}")
+    typer.echo(f"\nCreditos restantes segun la API: {r.usage.remaining}")
+
+
+@app.command()
+def ingest(
+    liga: str = typer.Argument(..., help="Clave de la liga, ej: soccer_spain_la_liga"),
+    mercados: str = typer.Option("h2h", help="h2h (1X2) y/o totals (mas/menos), separados por coma"),
+    regiones: str = typer.Option("eu", help="Regiones: eu, uk..."),
+    max_creditos: int = typer.Option(4, help="Maximo de creditos que puede gastar esta ejecucion"),
+    db: str = typer.Option("data/surebet.db"),
+):
+    """Captura cuotas reales de una liga y las guarda (con tope de gasto)."""
+    conn = connect(db)
+    try:
+        s = run_ingest(_api(), conn, liga, mercados.split(","), regiones.split(","), per_run_max=max_creditos)
+    except BudgetError as e:
+        typer.echo(f"No se hizo la llamada: {e}")
+        raise typer.Exit(1)
+    except t_api.SourceError as e:
+        typer.echo(f"Error: {e}")
+        raise typer.Exit(1)
+    if s.error:
+        typer.echo(f"La API respondio con error: {s.error}")
+        raise typer.Exit(1)
+    typer.echo(f"HTTP {s.status} | eventos: {s.events} | cuotas guardadas: {s.quotes}")
+    typer.echo(f"Creditos: esta llamada {s.credits_last} (estimado {s.cost_estimated}), quedan {s.credits_remaining}")
+    typer.echo(f"Cuotas con hora de actualizacion de la casa: {s.with_update_time} de {s.quotes}")
+    typer.echo(f"Resultados sin reconocer: {s.unmapped}")
+    typer.echo("Casas devueltas (cuotas por casa):")
+    for k, n in sorted(s.books.items()):
+        typer.echo(f"  {k:24s} {n}")
+
+
+@app.command()
+def quota(db: str = typer.Option("data/surebet.db")):
+    """Muestra los creditos que quedan segun la ultima llamada guardada."""
+    rem = known_remaining(connect(db), t_api.PROVIDER)
+    typer.echo("Aun no hay llamadas guardadas." if rem is None else f"Creditos restantes: {rem}")
 
 
 if __name__ == "__main__":
