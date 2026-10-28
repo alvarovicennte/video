@@ -1108,7 +1108,7 @@ La segunda mejor cuota permite medir la **profundidad**: cuántas combinaciones 
 ### 9.3 Precisión numérica
 
 - `Decimal` con 28 dígitos de precisión; las cuotas se guardan como texto exacto (`"2.10"`).
-- Las comparaciones (`S < 1`) se hacen sin redondeos intermedios (con 28 dígitos el error es despreciable; si algún día hiciera falta exactitud absoluta, `fractions.Fraction`).
+- La decisión «hay arbitraje» (`S < 1`) se toma con fracciones exactas (`fractions.Fraction`), no comparando sumas en `Decimal`: en H1 una prueba de propiedades detectó que tres cuotas de 3,00 suman 0,999…9 en `Decimal` cuando matemáticamente suman 1, lo que habría mostrado un falso arbitraje.
 - El dinero se cuantiza a céntimos (`ROUND_HALF_UP`) solo al presentar importes.
 - Prohibido `float` en el motor; un test lo vigila.
 

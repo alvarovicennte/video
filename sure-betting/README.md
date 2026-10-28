@@ -1,21 +1,34 @@
 # SURE BETTING
 
-Herramienta personal para detectar y **verificar** oportunidades de arbitraje deportivo (surebets) entre casas con licencia en España.
+Herramienta personal para detectar y **verificar** oportunidades de arbitraje deportivo (surebets).
 
 ## Estado
 
-**Fase 0 terminada: investigación, viabilidad y arquitectura.** Todavía no hay código de la aplicación.
+- **Fase 0 (investigacion):** hecha. Ver [`docs/fase-0-investigacion.md`](docs/fase-0-investigacion.md).
+- **H1 (calculadora verificable + datos de prueba):** hecha. 40 pruebas automaticas.
+- Siguiente: **H2** (primera fuente real de cuotas).
 
-- Documento principal: [`docs/fase-0-investigacion.md`](docs/fase-0-investigacion.md)
-- Pruebas técnicas reproducibles: [`docs/pruebas-fase-0/`](docs/pruebas-fase-0/)
+## Probar la calculadora en Windows (opcional, solo si quieres)
 
-## Conclusión en cuatro líneas
+1. Instala Python 3.12 o superior desde https://www.python.org/downloads/ y **marca la casilla "Add python.exe to PATH"** al instalar.
+2. Abre la carpeta `sure-betting` en el Explorador, haz clic en la barra de direcciones, escribe `cmd` y pulsa Enter.
+3. Copia y pega, una linea cada vez:
 
-1. Ninguna fuente gratuita y autorizada da cuotas automáticas de las webs `.es`; con 0 € se construye un sistema de **detección + verificación manual + medición**, no un escáner en tiempo real.
-2. Primer deporte: fútbol prepartido (1X2 y más/menos 2,5 en LaLiga y Premier League).
-3. Fuentes: The Odds API (detección), Betfair Exchange ES (mercado español oficial) y captura manual (verificación).
-4. Stack: Python + SQLite + línea de comandos; motor determinista con `Decimal` y tests; sin IA en el camino crítico.
+```
+python -m venv .venv
+.venv\Scripts\activate
+pip install -e .[dev]
+surebet calc 2,10 2,00 --banca 100 --paso 1
+```
 
-## Siguiente paso
+Otros comandos:
 
-Responder a las decisiones 1 y 2 de la sección 14 del documento (objetivo del proyecto y repositorio) y empezar el hito H1: calculadora verificable y datos de prueba.
+```
+surebet calc 2,45 3,60 3,40 --paso 1
+surebet backlay 100 2,20 2,10 --comision 0,02
+surebet gen-test-data
+pytest
+```
+
+`surebet calc` te dice si hay arbitraje, cuanto apostar a cada resultado y cuanto pierdes por redondear.
+Las cuotas se escriben con coma o con punto. Es teoria: no sabe si la cuota sigue disponible en la web.
