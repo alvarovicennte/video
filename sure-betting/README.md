@@ -7,7 +7,8 @@ Herramienta personal para detectar y **verificar** oportunidades de arbitraje de
 - **Fase 0 (investigacion):** hecha. Ver [`docs/fase-0-investigacion.md`](docs/fase-0-investigacion.md).
 - **H1 (calculadora verificable + datos de prueba):** hecha. 40 pruebas automaticas.
 - **H2 (captura de The Odds API):** codigo hecho y probado sin red (52 pruebas). Falta la primera llamada real.
-- Siguiente: H3 (detector).
+- **Motor universal:** busca arbitrajes en cualquier deporte y combinando mercados, con programacion lineal exacta. Ver [`docs/motor-universal.md`](docs/motor-universal.md). Prueba: `surebet scan docs/ejemplos/cuotas_multideporte_inventadas.csv`.
+- Siguiente: conectar fuentes de datos reales de mas deportes.
 
 ## Calculadora en una pagina (sin instalar nada)
 

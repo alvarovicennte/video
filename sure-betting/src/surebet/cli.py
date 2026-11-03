@@ -14,6 +14,8 @@ from .providers import the_odds_api as t_api
 from .quota import BudgetError, known_remaining
 from .storage.db import connect
 import json as _json
+from fractions import Fraction as _F
+from . import universal as U
 
 app = typer.Typer(add_completion=False, help="SURE BETTING (H1): calculadora verificable.")
 
@@ -154,6 +156,59 @@ def quota(db: str = typer.Option("data/surebet.db")):
     """Muestra los creditos que quedan segun la ultima llamada guardada."""
     rem = known_remaining(connect(db), t_api.PROVIDER)
     typer.echo("Aun no hay llamadas guardadas." if rem is None else f"Creditos restantes: {rem}")
+
+
+
+def _print_opps(opps, banca: str, paso: str):
+    if not opps:
+        typer.echo("No hay arbitrajes en estos datos.")
+        return
+    bank, step = U.frac(banca), U.frac(paso)
+    for o in opps:
+        estado = "ROBUSTO" if o.robust else "FRAGIL: solo sale si nadie se retira (reglas de anulacion distintas)"
+        typer.echo(f"\n[{o.event_id}] {o.event_name} ({o.sport}, {o.period})")
+        typer.echo(f"  Retorno garantizado: {float(o.ret) * 100:.2f}%  | {estado}" + ("  | combina mercados" if o.markets_used > 1 else ""))
+        model = U.model_for(o.sport)
+        retire = o.robust and model == "winner" and o.sport.lower() in U.RETIREMENT_SPORTS
+        stakes, total, worst = U.round_legs(o, model, bank, step, retire)
+        for (bt, w), s in zip(o.legs, stakes):
+            ln = f" {bt.line}" if bt.line is not None else ""
+            lado = " (EN CONTRA, importe = responsabilidad)" if bt.side == "LAY" else ""
+            typer.echo(f"   - {bt.market}{ln} {bt.outcome}{lado} en {bt.book} a {float(bt.odds):.2f}: ideal {float(w * bank):.2f} EUR, redondeado {float(s):.2f} EUR")
+        typer.echo(f"  Total {float(total):.2f} EUR, peor resultado tras redondear: {float(worst):+.2f} EUR")
+
+
+@app.command()
+def scan(
+    archivo: str = typer.Argument(..., help="CSV de cuotas (formato de docs/ejemplos/cuotas_multideporte_inventadas.csv)"),
+    banca: str = typer.Option("100", help="Dinero total de referencia (EUR)"),
+    paso: str = typer.Option("1", help="Redondeo de cada apuesta (EUR)"),
+):
+    """Busca arbitrajes en cualquier deporte y combinacion de mercados (motor exacto)."""
+    _print_opps(U.scan_bets(U.read_csv(archivo)), banca, paso)
+
+
+@app.command("scan-db")
+def scan_db(
+    db: str = typer.Option("data/surebet.db"),
+    banca: str = typer.Option("100"),
+    paso: str = typer.Option("1"),
+):
+    """Busca arbitrajes en las ultimas cuotas capturadas de The Odds API (futbol 1X2 y totales)."""
+    conn = connect(db)
+    rows = conn.execute(
+        "SELECT q.* FROM odds_quote q JOIN (SELECT provider_event_id, book_key, market_code, line, outcome, MAX(id) AS mid "
+        "FROM odds_quote GROUP BY 1,2,3,4,5) last ON q.id = last.mid WHERE q.period = 'REG_90' AND q.outcome NOT LIKE 'UNMAPPED%'").fetchall()
+    out = []
+    for r in rows:
+        market = {"FT_1X2": "1X2", "FT_OU": "TOTAL"}.get(r["market_code"])
+        if not market:
+            continue
+        out.append({"event_id": r["provider_event_id"], "event_name": f"{r['home_raw']} - {r['away_raw']}", "sport": "football",
+                    "period": "REG_90", "market": market, "line": r["line"], "outcome": r["outcome"], "side": "BACK",
+                    "book": r["book_key"], "odds": r["odds"], "commission": "0", "rule": ""})
+    typer.echo(f"{len(out)} cuotas recientes leidas. OJO: son webs internacionales (indicios), no las .es.")
+    _print_opps(U.scan_bets(out), banca, paso)
 
 
 if __name__ == "__main__":

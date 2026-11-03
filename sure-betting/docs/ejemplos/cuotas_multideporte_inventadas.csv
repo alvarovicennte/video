@@ -1,0 +1,21 @@
+event_id,event_name,sport,period,market,line,outcome,side,book,odds,commission,rule,captured_at
+F1,Futbol: dos mercados que solo juntos dan arbitraje,football,REG_90,DNB,,HOME,BACK,casa_a.es,1.80,0,,2026-11-04T17:00:00Z
+F1,Futbol: dos mercados que solo juntos dan arbitraje,football,REG_90,DC,,X2,BACK,casa_b.es,2.40,0,,2026-11-04T17:00:00Z
+F1,Futbol: dos mercados que solo juntos dan arbitraje,football,REG_90,1X2,,HOME,BACK,casa_b.es,1.70,0,,2026-11-04T17:00:00Z
+F2,Futbol: 1X2 clasico entre tres casas,football,REG_90,1X2,,HOME,BACK,casa_a.es,2.45,0,,2026-11-04T17:00:00Z
+F2,Futbol: 1X2 clasico entre tres casas,football,REG_90,1X2,,DRAW,BACK,casa_b.es,3.60,0,,2026-11-04T17:00:00Z
+F2,Futbol: 1X2 clasico entre tres casas,football,REG_90,1X2,,AWAY,BACK,casa_c.es,3.40,0,,2026-11-04T17:00:00Z
+F2,Futbol: 1X2 clasico entre tres casas,football,REG_90,1X2,,HOME,BACK,casa_c.es,2.30,0,,2026-11-04T17:00:00Z
+F3,Futbol: linea de 2 goles con devolucion,football,REG_90,TOTAL,2,OVER,BACK,casa_a.es,2.10,0,,2026-11-04T17:00:00Z
+F3,Futbol: linea de 2 goles con devolucion,football,REG_90,TOTAL,2,UNDER,BACK,casa_b.es,2.00,0,,2026-11-04T17:00:00Z
+F4,Futbol: sin arbitraje,football,REG_90,1X2,,HOME,BACK,casa_a.es,2.30,0,,2026-11-04T17:00:00Z
+F4,Futbol: sin arbitraje,football,REG_90,1X2,,DRAW,BACK,casa_b.es,3.30,0,,2026-11-04T17:00:00Z
+F4,Futbol: sin arbitraje,football,REG_90,1X2,,AWAY,BACK,casa_c.es,3.20,0,,2026-11-04T17:00:00Z
+T1,Tenis: misma regla de retirada,tennis,MATCH,WINNER,,P1,BACK,casa_a.es,2.10,0,ONE_SET,2026-11-04T17:00:00Z
+T1,Tenis: misma regla de retirada,tennis,MATCH,WINNER,,P2,BACK,casa_b.es,2.00,0,ONE_SET,2026-11-04T17:00:00Z
+T2,Tenis: reglas distintas (fragil),tennis,MATCH,WINNER,,P1,BACK,casa_a.es,2.10,0,MATCH_COMPLETED,2026-11-04T17:00:00Z
+T2,Tenis: reglas distintas (fragil),tennis,MATCH,WINNER,,P2,BACK,casa_b.es,2.00,0,ONE_SET,2026-11-04T17:00:00Z
+TT1,Tenis de mesa: casa contra exchange,table_tennis,MATCH,WINNER,,P1,BACK,casa_a.es,2.20,0,BALL_SERVED,2026-11-04T17:00:00Z
+TT1,Tenis de mesa: casa contra exchange,table_tennis,MATCH,WINNER,,P1,LAY,exchange.es,2.10,0.02,BALL_SERVED,2026-11-04T17:00:00Z
+B1,Baloncesto: total con linea entera,basketball,REG,TOTAL,221,OVER,BACK,casa_a.es,2.06,0,,2026-11-04T17:00:00Z
+B1,Baloncesto: total con linea entera,basketball,REG,TOTAL,221,UNDER,BACK,casa_b.es,2.02,0,,2026-11-04T17:00:00Z
