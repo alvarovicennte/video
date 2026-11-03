@@ -172,7 +172,7 @@ def _print_opps(opps, banca: str, paso: str):
         retire = o.robust and model == "winner" and o.sport.lower() in U.RETIREMENT_SPORTS
         stakes, total, worst = U.round_legs(o, model, bank, step, retire)
         for (bt, w), s in zip(o.legs, stakes):
-            ln = f" {bt.line}" if bt.line is not None else ""
+            ln = f" {float(bt.line):g}" if bt.line is not None else ""
             lado = " (EN CONTRA, importe = responsabilidad)" if bt.side == "LAY" else ""
             typer.echo(f"   - {bt.market}{ln} {bt.outcome}{lado} en {bt.book} a {float(bt.odds):.2f}: ideal {float(w * bank):.2f} EUR, redondeado {float(s):.2f} EUR")
         typer.echo(f"  Total {float(total):.2f} EUR, peor resultado tras redondear: {float(worst):+.2f} EUR")
@@ -188,26 +188,40 @@ def scan(
     _print_opps(U.scan_bets(U.read_csv(archivo)), banca, paso)
 
 
+# Comision supuesta de los exchanges internacionales (conservadora, sin verificar por casa).
+EXCHANGE_COMMISSION = {"betfair_ex_eu": "0.05", "betfair_ex_uk": "0.05", "matchbook": "0.05", "smarkets": "0.05"}
+# Marcas cuya empresa tiene licencia DGOJ en Espana (docs/fase-0-investigacion.md, 4.12).
+# Las cuotas de The Odds API son de sus webs internacionales: indicio, no la cuota .es.
+SPAIN_PROXIES = {"williamhill", "betway", "sport888", "leovegas", "leovegas_se", "betsson", "onexbet",
+                 "winamax_fr", "winamax_de", "codere_it", "casumo"}
+
+
 @app.command("scan-db")
 def scan_db(
     db: str = typer.Option("data/surebet.db"),
     banca: str = typer.Option("100"),
     paso: str = typer.Option("1"),
+    solo_espana: bool = typer.Option(False, help="Solo marcas con licencia en Espana (indicios)"),
 ):
-    """Busca arbitrajes en las ultimas cuotas capturadas de The Odds API (futbol 1X2 y totales)."""
+    """Busca arbitrajes en las ultimas cuotas capturadas de The Odds API (futbol 1X2, totales y exchanges)."""
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     conn = connect(db)
     rows = conn.execute(
         "SELECT q.* FROM odds_quote q JOIN (SELECT provider_event_id, book_key, market_code, line, outcome, MAX(id) AS mid "
-        "FROM odds_quote GROUP BY 1,2,3,4,5) last ON q.id = last.mid WHERE q.period = 'REG_90' AND q.outcome NOT LIKE 'UNMAPPED%'").fetchall()
+        "FROM odds_quote GROUP BY 1,2,3,4,5) last ON q.id = last.mid WHERE q.period = 'REG_90' "
+        "AND q.outcome NOT LIKE 'UNMAPPED%' AND q.commence_time > ?", (now,)).fetchall()
     out = []
     for r in rows:
-        market = {"FT_1X2": "1X2", "FT_OU": "TOTAL"}.get(r["market_code"])
-        if not market:
+        market = {"FT_1X2": "1X2", "FT_1X2_LAY": "1X2", "FT_OU": "TOTAL"}.get(r["market_code"])
+        if not market or (solo_espana and r["book_key"] not in SPAIN_PROXIES):
             continue
-        out.append({"event_id": r["provider_event_id"], "event_name": f"{r['home_raw']} - {r['away_raw']}", "sport": "football",
-                    "period": "REG_90", "market": market, "line": r["line"], "outcome": r["outcome"], "side": "BACK",
-                    "book": r["book_key"], "odds": r["odds"], "commission": "0", "rule": ""})
-    typer.echo(f"{len(out)} cuotas recientes leidas. OJO: son webs internacionales (indicios), no las .es.")
+        out.append({"event_id": r["provider_event_id"], "event_name": f"{r['home_raw']} - {r['away_raw']} ({r['commence_time'][:16]}Z)",
+                    "sport": "football", "period": "REG_90", "market": market, "line": r["line"], "outcome": r["outcome"],
+                    "side": "LAY" if r["market_code"].endswith("_LAY") else "BACK", "book": r["book_key"], "odds": r["odds"],
+                    "commission": EXCHANGE_COMMISSION.get(r["book_key"], "0"), "rule": ""})
+    eventos = len({o["event_id"] for o in out})
+    typer.echo(f"{len(out)} cuotas de {eventos} partidos sin empezar. Cuotas de webs internacionales: indicios, no la cuota .es.")
     _print_opps(U.scan_bets(out), banca, paso)
 
 

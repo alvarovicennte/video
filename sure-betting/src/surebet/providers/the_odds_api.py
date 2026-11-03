@@ -59,12 +59,13 @@ def estimate_cost(markets: list[str], regions: list[str]) -> int:
 def soccer_codes(sport_key: str, market: str) -> tuple[str, str]:
     """(market_code, period). Fuera del futbol el periodo queda UNKNOWN a proposito."""
     if sport_key.startswith("soccer_"):
-        return {"h2h": ("FT_1X2", "REG_90"), "totals": ("FT_OU", "REG_90")}.get(market, (market.upper(), "UNKNOWN"))
+        return {"h2h": ("FT_1X2", "REG_90"), "h2h_lay": ("FT_1X2_LAY", "REG_90"),
+                "totals": ("FT_OU", "REG_90")}.get(market, (market.upper(), "UNKNOWN"))
     return market.upper(), "UNKNOWN"
 
 
 def _outcome(market: str, name: str, home: str, away: str) -> str:
-    if market == "h2h":
+    if market in ("h2h", "h2h_lay"):
         if name == home:
             return "HOME"
         if name == away:
