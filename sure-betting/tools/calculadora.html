@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora Sure Betting</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: una columna de trabajo (entradas, resultado, reparto, margen, comprobaciones); se apila en movil. */
+:root {
+  --bg: #f1f4f2; --panel: #ffffff; --fg: #14201c; --muted: #53645d; --line: #d3dbd7;
+  --accent: #0b6e5c; --accent-fg: #ffffff; --good: #17713f; --warn: #9a5400; --bad: #b3261e;
+  --good-bg: #e2f4ea; --warn-bg: #fdf0dc; --bad-bg: #fbe6e4; --field: #f8faf9;
+  --sans: "IBM Plex Sans", system-ui, "Segoe UI", sans-serif; --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1614; --panel: #17201d; --fg: #e6eeea; --muted: #94a69e; --line: #2a3733;
+  --accent: #4fc3a6; --accent-fg: #06201a; --good: #5bd08e; --warn: #f0a548; --bad: #ff8f86;
+  --good-bg: #17301f; --warn-bg: #33250f; --bad-bg: #38191a; --field: #101815; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1614; --panel: #17201d; --fg: #e6eeea; --muted: #94a69e; --line: #2a3733;
+  --accent: #4fc3a6; --accent-fg: #06201a; --good: #5bd08e; --warn: #f0a548; --bad: #ff8f86;
+  --good-bg: #17301f; --warn-bg: #33250f; --bad-bg: #38191a; --field: #101815; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.5;
+  padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: 24px; font-weight: 600; margin: 0; text-wrap: balance; }
+h2 { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+p { margin: 0; }
+.sub { color: var(--muted); max-width: 65ch; margin-top: 4px; }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-width: 0; }
+.example { font-family: var(--mono); font-size: 12px; color: var(--warn); background: var(--warn-bg); display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 12px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+.seg button { font: inherit; background: var(--field); color: var(--fg); border: 0; padding: 6px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.legs { display: flex; flex-direction: column; gap: 10px; }
+.leg { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.leg:first-child { border-top: 0; padding-top: 0; }
+label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); min-width: 0; }
+input[type=text] { font: inherit; font-family: var(--mono); color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0; width: 100%; }
+input[type=text].lbl, input[type=text].casa { font-family: var(--sans); }
+input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input.bad { border-color: var(--bad); }
+.globals { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.verdict { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+.pill { font-weight: 600; padding: 6px 12px; border-radius: 999px; }
+.pill.good { background: var(--good-bg); color: var(--good); } .pill.bad { background: var(--bad-bg); color: var(--bad); } .pill.warn { background: var(--warn-bg); color: var(--warn); }
+.metrics { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 12px; }
+.metric span { display: block; font-size: 12px; color: var(--muted); } .metric b { font-family: var(--mono); font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.msg { margin-top: 12px; padding: 8px 12px; border-radius: 6px; } .msg.warn { background: var(--warn-bg); color: var(--warn); } .msg.bad { background: var(--bad-bg); color: var(--bad); }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 12px; font-weight: 500; color: var(--muted); }
+td.n, th.n { text-align: right; font-family: var(--mono); padding-right: 0; padding-left: 14px; }
+tfoot td { font-weight: 600; border-bottom: 0; }
+.checks { display: flex; flex-direction: column; gap: 8px; }
+.checks label { flex-direction: row; align-items: flex-start; gap: 10px; color: var(--fg); font-size: 15px; }
+.checks input { margin-top: 4px; accent-color: var(--accent); }
+.note { color: var(--muted); font-size: 13px; max-width: 70ch; }
+.hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.top { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: flex-start; }
+.theme { font: inherit; font-size: 13px; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+</style>
+
+<main>
+  <div class="top">
+    <div>
+      <h1>Calculadora Sure Betting</h1>
+      <p class="sub">Pon la mejor cuota de cada resultado, de la casa donde la veas. Te dice si hay arbitraje, cuánto apostar y cuánto pierdes al redondear.</p>
+    </div>
+    <button class="theme" id="theme" type="button">Cambiar tema</button>
+  </div>
+
+  <section aria-labelledby="h-in">
+    <h2 id="h-in">Cuotas</h2>
+    <p class="example" id="example">Ejemplo: cuotas inventadas</p>
+    <div><div class="seg" role="group" aria-label="Número de resultados">
+      <button type="button" id="n2" aria-pressed="true">2 resultados</button>
+      <button type="button" id="n3" aria-pressed="false">3 resultados (1X2)</button>
+    </div></div>
+    <div class="legs" id="legs"></div>
+    <div class="globals">
+      <label>Dinero total a repartir (€)<input type="text" id="bank" inputmode="decimal" value="100"></label>
+      <label>Redondeo de cada apuesta (€)<input type="text" id="step" inputmode="decimal" value="1"></label>
+    </div>
+    <p class="hint">Cuotas decimales, con coma o punto. Comisión solo si es un exchange (Betfair España: 2).</p>
+  </section>
+
+  <section aria-labelledby="h-res">
+    <h2 id="h-res">Resultado</h2>
+    <div id="result"></div>
+  </section>
+
+  <section aria-labelledby="h-rep" id="sec-rep">
+    <h2 id="h-rep">Reparto</h2>
+    <div class="scroll" id="split"></div>
+  </section>
+
+  <section aria-labelledby="h-mar" id="sec-mar">
+    <h2 id="h-mar">Cuánto puede bajar cada cuota</h2>
+    <div class="scroll" id="margin"></div>
+    <p class="hint">Mientras las demás no cambien. Si una cuota baja más que esto, deja de haber arbitraje.</p>
+  </section>
+
+  <section aria-labelledby="h-chk">
+    <h2 id="h-chk">Antes de apostar</h2>
+    <div class="checks" id="checks"></div>
+    <p class="note" id="chk-status" style="margin-top:12px"></p>
+  </section>
+
+  <p class="note">Esto es teoría con las cuotas que escribes. No sabe si siguen disponibles, si la casa te limita el importe, ni si dos casas liquidan igual una anulación (por ejemplo, una retirada en tenis). Los cálculos son exactos, sin errores de decimales.</p>
+</main>
+
+<script>
+// CORE-START
+const gcd = (a, b) => { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) { [a, b] = [b, a % b]; } return a; };
+const R = (n, d = 1n) => { if (d < 0n) { n = -n; d = -d; } const g = gcd(n, d) || 1n; return { n: n / g, d: d / g }; };
+const add = (a, b) => R(a.n * b.d + b.n * a.d, a.d * b.d);
+const sub = (a, b) => R(a.n * b.d - b.n * a.d, a.d * b.d);
+const mul = (a, b) => R(a.n * b.n, a.d * b.d);
+const div = (a, b) => R(a.n * b.d, a.d * b.n);
+const cmp = (a, b) => { const x = a.n * b.d - b.n * a.d; return x < 0n ? -1 : x > 0n ? 1 : 0; };
+const ONE = R(1n), ZERO = R(0n);
+function parse(s) {
+  s = String(s).trim().replace(",", ".");
+  if (!/^\d+(\.\d+)?$/.test(s)) return null;
+  const [i, f = ""] = s.split(".");
+  return R(BigInt(i + f), 10n ** BigInt(f.length));
+}
+function fixed(r, p) {
+  const neg = r.n < 0n, n = neg ? -r.n : r.n;
+  const q = (2n * n * 10n ** BigInt(p) + r.d) / (2n * r.d);
+  let s = q.toString().padStart(p + 1, "0");
+  if (p > 0) s = s.slice(0, -p) + "," + s.slice(-p);
+  return (neg && q !== 0n ? "-" : "") + s;
+}
+function effective(odds, k) { return add(ONE, mul(sub(odds, ONE), sub(ONE, k))); }
+function analyse(legs, bank, step) {
+  const e = legs.map(l => effective(l.odds, l.k));
+  const inv = e.map(x => div(ONE, x));
+  const S = inv.reduce(add, ZERO);
+  const arb = cmp(S, ONE) < 0;
+  const ret = sub(div(ONE, S), ONE);
+  const ideal = inv.map(x => div(mul(bank, x), S));
+  let best = null;
+  const cands = ideal.map(a => {
+    const q = div(a, step), lo = q.n / q.d, hi = (q.n + q.d - 1n) / q.d;
+    const set = [...new Set([lo, hi])].filter(v => v > 0n).map(v => mul(R(v), step));
+    return set.length ? set : [step];
+  });
+  (function walk(i, acc) {
+    if (i === cands.length) {
+      const total = acc.reduce(add, ZERO);
+      const pays = acc.map((a, j) => mul(a, e[j]));
+      let mn = pays[0]; for (const p of pays) if (cmp(p, mn) < 0) mn = p;
+      const profit = sub(mn, total), roi = div(profit, total);
+      if (!best || cmp(roi, best.roi) > 0 || (cmp(roi, best.roi) === 0 && cmp(profit, best.profit) > 0))
+        best = { stakes: acc.slice(), pays, total, profit, roi };
+      return;
+    }
+    for (const c of cands[i]) { acc.push(c); walk(i + 1, acc); acc.pop(); }
+  })(0, []);
+  const idealPays = ideal.map((a, j) => mul(a, e[j]));
+  // cuota minima que mantiene S = 1 con las demas fijas
+  const floorOdds = legs.map((l, i) => {
+    const others = sub(S, inv[i]);
+    if (cmp(others, ONE) >= 0) return null;
+    const eStar = div(ONE, sub(ONE, others));
+    const oddsStar = add(ONE, div(sub(eStar, ONE), sub(ONE, l.k)));
+    return oddsStar;
+  });
+  return { S, arb, ret, ideal, idealPays, best, floorOdds };
+}
+// CORE-END
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const eur = r => fixed(r, 2) + " €";
+let n = 2;
+const DEFAULTS = {
+  2: [{ lbl: "Resultado 1", casa: "Casa A", odds: "2,10", k: "0" }, { lbl: "Resultado 2", casa: "Casa B", odds: "2,00", k: "0" }],
+  3: [{ lbl: "Local (1)", casa: "Casa A", odds: "2,45", k: "0" }, { lbl: "Empate (X)", casa: "Casa B", odds: "3,60", k: "0" }, { lbl: "Visitante (2)", casa: "Casa C", odds: "3,40", k: "0" }],
+};
+const CHECKS = [
+  "Es el mismo mercado en todas las casas (mismo periodo, misma línea, mismo partido).",
+  "He visto cada cuota en la web .es de su casa, hace menos de 2 minutos.",
+  "Las casas liquidan igual si el partido se suspende o un jugador se retira.",
+  "La casa acepta el importe que me toca en cada resultado (sin límite de apuesta).",
+  "Con el redondeo que voy a usar, el beneficio sigue siendo positivo.",
+];
+
+function buildLegs(vals) {
+  $("legs").innerHTML = vals.map((v, i) => `<div class="leg">
+    <label>Resultado<input type="text" class="lbl" id="lbl${i}" value="${esc(v.lbl)}"></label>
+    <label>Casa<input type="text" class="casa" id="casa${i}" value="${esc(v.casa)}"></label>
+    <label>Cuota<input type="text" id="odds${i}" inputmode="decimal" value="${esc(v.odds)}"></label>
+    <label>Comisión (%)<input type="text" id="k${i}" inputmode="decimal" value="${esc(v.k)}"></label></div>`).join("");
+  $("legs").querySelectorAll("input").forEach(el => el.addEventListener("input", () => { markEdited(); render(); }));
+}
+function markEdited() { $("example").hidden = true; }
+function readLegs() {
+  const legs = []; let ok = true;
+  for (let i = 0; i < n; i++) {
+    const odds = parse($("odds" + i).value), kp = parse($("k" + i).value || "0");
+    const badOdds = !odds || cmp(odds, ONE) <= 0;
+    const badK = !kp || cmp(kp, R(100n)) >= 0;
+    $("odds" + i).classList.toggle("bad", badOdds); $("k" + i).classList.toggle("bad", badK);
+    if (badOdds || badK) ok = false;
+    else legs.push({ lbl: $("lbl" + i).value || "Resultado " + (i + 1), casa: $("casa" + i).value || "—", odds, k: div(kp, R(100n)) });
+  }
+  return ok ? legs : null;
+}
+function render() {
+  const legs = readLegs();
+  const bank = parse($("bank").value), step = parse($("step").value);
+  $("bank").classList.toggle("bad", !bank || cmp(bank, ZERO) <= 0);
+  $("step").classList.toggle("bad", !step || cmp(step, ZERO) <= 0);
+  const secs = ["sec-rep", "sec-mar"].map($);
+  if (!legs || !bank || !step || cmp(bank, ZERO) <= 0 || cmp(step, ZERO) <= 0) {
+    $("result").innerHTML = `<p class="msg bad">Revisa los campos marcados en rojo: las cuotas deben ser números mayores que 1 y el dinero y el redondeo, mayores que 0.</p>`;
+    secs.forEach(s => s.hidden = true); updateChecks(false); return;
+  }
+  const a = analyse(legs, bank, step), b = a.best;
+  secs.forEach(s => s.hidden = false);
+  const pillCls = a.arb ? "good" : "bad";
+  let html = `<div class="verdict"><span class="pill ${pillCls}">${a.arb ? "Hay arbitraje teórico" : "No hay arbitraje"}</span></div>
+    <div class="metrics">
+      <div class="metric"><span>Suma de probabilidades (S)</span><b>${fixed(a.S, 6)}</b></div>
+      <div class="metric"><span>${a.arb ? "Retorno teórico" : "Margen del conjunto"}</span><b>${a.arb ? fixed(mul(a.ret, R(100n)), 2) : fixed(mul(sub(a.S, ONE), R(100n)), 2)} %</b></div>`;
+  if (a.arb) html += `<div class="metric"><span>Beneficio tras redondear</span><b>${eur(b.profit)}</b></div>
+      <div class="metric"><span>Rentabilidad tras redondear</span><b>${fixed(mul(b.roi, R(100n)), 2)} %</b></div>`;
+  html += `</div>`;
+  if (!a.arb) html += `<p class="msg bad">Con estas cuotas pierdes dinero en cualquier reparto. Prueba con la mejor cuota de cada resultado entre varias casas.</p>`;
+  else if (cmp(b.profit, ZERO) <= 0) html += `<p class="msg bad">Con este redondeo el arbitraje desaparece. Baja el paso de redondeo o sube el dinero total.</p>`;
+  else if (cmp(b.roi, R(1n, 100n)) < 0) html += `<p class="msg warn">Por debajo del 1 % cualquier bajada pequeña de cuota se come el beneficio. Mira la tabla de margen.</p>`;
+  $("result").innerHTML = html;
+
+  if (a.arb) {
+    const rows = legs.map((l, i) => `<tr><td>${esc(l.lbl)}</td><td>${esc(l.casa)}</td><td class="n">${fixed(l.odds, 2)}</td>
+      <td class="n">${eur(a.ideal[i])}</td><td class="n">${eur(b.stakes[i])}</td><td class="n">${eur(b.pays[i])}</td></tr>`).join("");
+    $("split").innerHTML = `<table><thead><tr><th>Resultado</th><th>Casa</th><th class="n">Cuota</th><th class="n">Reparto ideal</th><th class="n">Apuesta redondeada</th><th class="n">Cobras si gana</th></tr></thead>
+      <tbody>${rows}</tbody><tfoot><tr><td colspan="4">Total apostado</td><td class="n">${eur(b.total)}</td><td class="n">Cobras como mínimo: ${eur(b.total.n === 0n ? ZERO : add(b.total, b.profit))}</td></tr></tfoot></table>`;
+  } else {
+    $("split").innerHTML = `<p class="note">No hay reparto que garantice beneficio.</p>`;
+  }
+  const mrows = legs.map((l, i) => {
+    const f = a.floorOdds[i];
+    if (!f) return `<tr><td>${esc(l.lbl)}</td><td>${esc(l.casa)}</td><td class="n">${fixed(l.odds, 2)}</td><td class="n" colspan="2">sin límite</td></tr>`;
+    const drop = mul(div(sub(l.odds, f), l.odds), R(100n));
+    return `<tr><td>${esc(l.lbl)}</td><td>${esc(l.casa)}</td><td class="n">${fixed(l.odds, 2)}</td><td class="n">${fixed(f, 3)}</td><td class="n">${cmp(drop, ZERO) > 0 ? "−" + fixed(drop, 2) + " %" : "ya no compensa"}</td></tr>`;
+  }).join("");
+  $("margin").innerHTML = `<table><thead><tr><th>Resultado</th><th>Casa</th><th class="n">Cuota</th><th class="n">Cuota mínima</th><th class="n">Puede bajar</th></tr></thead><tbody>${mrows}</tbody></table>`;
+  updateChecks(a.arb);
+}
+function buildChecks() {
+  $("checks").innerHTML = CHECKS.map((t, i) => `<label><input type="checkbox" id="chk${i}"><span>${esc(t)}</span></label>`).join("");
+  $("checks").querySelectorAll("input").forEach(el => el.addEventListener("change", () => updateChecks(lastArb)));
+}
+let lastArb = false;
+function updateChecks(arb) {
+  lastArb = arb;
+  const done = CHECKS.filter((_, i) => $("chk" + i).checked).length;
+  const el = $("chk-status");
+  if (!arb) { el.textContent = "Primero necesitas un arbitraje teórico."; return; }
+  el.textContent = done === CHECKS.length
+    ? "Las 5 comprobaciones están hechas. Es verificable según lo que tú has comprobado; la calculadora no puede confirmarlo."
+    : `${done} de ${CHECKS.length} comprobaciones hechas. Hasta completarlas, es solo un candidato.`;
+}
+function setN(k) {
+  n = k; $("n2").setAttribute("aria-pressed", k === 2); $("n3").setAttribute("aria-pressed", k === 3);
+  buildLegs(DEFAULTS[k]); $("example").hidden = false; render();
+}
+$("n2").addEventListener("click", () => setN(2));
+$("n3").addEventListener("click", () => setN(3));
+$("bank").addEventListener("input", render); $("step").addEventListener("input", render);
+$("theme").addEventListener("click", () => {
+  const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  r.dataset.theme = dark ? "light" : "dark";
+});
+buildChecks(); setN(2);
+</script>
+
+</html>

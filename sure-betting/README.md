@@ -9,6 +9,10 @@ Herramienta personal para detectar y **verificar** oportunidades de arbitraje de
 - **H2 (captura de The Odds API):** codigo hecho y probado sin red (52 pruebas). Falta la primera llamada real.
 - Siguiente: H3 (detector).
 
+## Calculadora en una pagina (sin instalar nada)
+
+Abre `tools/calculadora.html` con doble clic (funciona sin internet). Escribes la mejor cuota de cada resultado y te dice si hay arbitraje, cuanto apostar, cuanto pierdes al redondear y cuanto puede bajar cada cuota. Usa aritmetica exacta con fracciones.
+
 ## Probar la calculadora en Windows (opcional, solo si quieres)
 
 1. Instala Python 3.12 o superior desde https://www.python.org/downloads/ y **marca la casilla "Add python.exe to PATH"** al instalar.
