@@ -13,6 +13,10 @@ Herramienta personal para detectar y **verificar** oportunidades de arbitraje de
 
 Abre `tools/calculadora.html` con doble clic (funciona sin internet). Escribes la mejor cuota de cada resultado y te dice si hay arbitraje, cuanto apostar, cuanto pierdes al redondear y cuanto puede bajar cada cuota. Usa aritmetica exacta con fracciones.
 
+## Matriz de cuotas (para uso real)
+
+`tools/matriz.html`: un partido, varias casas. Escribes la cuota que ves en cada casa, marca la mejor de cada resultado, calcula el arbitraje y avisa si una cuota tiene mas de 2 minutos. Lleva un registro (tambien de lo que no es arbitraje) que se copia como CSV. Se guarda en el navegador.
+
 ## Probar la calculadora en Windows (opcional, solo si quieres)
 
 1. Instala Python 3.12 o superior desde https://www.python.org/downloads/ y **marca la casilla "Add python.exe to PATH"** al instalar.

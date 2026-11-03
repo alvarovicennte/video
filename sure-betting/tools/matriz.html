@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matriz de Cuotas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: partido arriba, tabla casas x resultados (la mejor cuota se marca sola), veredicto, comprobaciones y registro. */
+:root {
+  --bg: #f1f4f2; --panel: #ffffff; --fg: #14201c; --muted: #53645d; --line: #d3dbd7;
+  --accent: #0b6e5c; --accent-fg: #ffffff; --good: #17713f; --warn: #9a5400; --bad: #b3261e;
+  --good-bg: #e2f4ea; --warn-bg: #fdf0dc; --bad-bg: #fbe6e4; --field: #f8faf9; --best: #d6efe5;
+  --sans: "IBM Plex Sans", system-ui, "Segoe UI", sans-serif; --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1614; --panel: #17201d; --fg: #e6eeea; --muted: #94a69e; --line: #2a3733;
+  --accent: #4fc3a6; --accent-fg: #06201a; --good: #5bd08e; --warn: #f0a548; --bad: #ff8f86;
+  --good-bg: #17301f; --warn-bg: #33250f; --bad-bg: #38191a; --field: #101815; --best: #1d4a3d; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1614; --panel: #17201d; --fg: #e6eeea; --muted: #94a69e; --line: #2a3733;
+  --accent: #4fc3a6; --accent-fg: #06201a; --good: #5bd08e; --warn: #f0a548; --bad: #ff8f86;
+  --good-bg: #17301f; --warn-bg: #33250f; --bad-bg: #38191a; --field: #101815; --best: #1d4a3d; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.5;
+  padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: 24px; font-weight: 600; margin: 0; text-wrap: balance; }
+h2 { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+p { margin: 0; } .sub { color: var(--muted); max-width: 70ch; margin-top: 4px; }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-width: 0; }
+.top { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: flex-start; }
+button { font: inherit; cursor: pointer; }
+.theme, .btn { font-size: 13px; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 12px; }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.matches { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.matches button { background: var(--field); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; text-align: left; }
+.matches button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+.matches small { display: block; font-family: var(--mono); font-size: 11px; opacity: .8; }
+.row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: end; }
+label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); min-width: 0; }
+input[type=text] { font: inherit; font-family: var(--mono); color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; min-width: 0; width: 100%; }
+input.txt { font-family: var(--sans); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { background: var(--field); color: var(--fg); border: 0; padding: 7px 14px; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.scroll { overflow-x: auto; margin-top: 12px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 5px 6px 5px 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; }
+th { font-size: 12px; font-weight: 500; color: var(--muted); }
+td.lbl { white-space: nowrap; padding-right: 12px; min-width: 120px; }
+.grid input[type=text] { width: 92px; text-align: right; }
+.grid input.best { background: var(--best); border-color: var(--accent); font-weight: 500; }
+.grid th input { width: 104px; text-align: left; font-size: 13px; }
+.verdict { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+.pill { font-weight: 600; padding: 6px 12px; border-radius: 999px; }
+.pill.good { background: var(--good-bg); color: var(--good); } .pill.bad { background: var(--bad-bg); color: var(--bad); } .pill.warn { background: var(--warn-bg); color: var(--warn); }
+.metrics { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 12px; }
+.metric span { display: block; font-size: 12px; color: var(--muted); } .metric b { font-family: var(--mono); font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.msg { margin-top: 12px; padding: 8px 12px; border-radius: 6px; } .msg.warn { background: var(--warn-bg); color: var(--warn); } .msg.bad { background: var(--bad-bg); color: var(--bad); }
+td.n, th.n { text-align: right; font-family: var(--mono); padding-left: 14px; padding-right: 0; white-space: nowrap; }
+.old { color: var(--bad); font-weight: 600; }
+.checks { display: flex; flex-direction: column; gap: 8px; }
+.checks label { flex-direction: row; align-items: flex-start; gap: 10px; color: var(--fg); font-size: 15px; }
+.checks input { margin-top: 4px; accent-color: var(--accent); }
+.note { color: var(--muted); font-size: 13px; max-width: 72ch; } .hint { font-size: 13px; color: var(--muted); margin-top: 8px; }
+textarea { width: 100%; min-height: 120px; font-family: var(--mono); font-size: 12px; background: var(--field); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin-top: 8px; }
+</style>
+
+<main>
+  <div class="top">
+    <div>
+      <h1>Matriz de Cuotas</h1>
+      <p class="sub">Escribe la cuota que ves en cada casa. La mejor de cada resultado se marca sola y se calcula si hay arbitraje. Cada cuota guarda la hora a la que la escribiste.</p>
+    </div>
+    <button class="theme" id="theme" type="button">Cambiar tema</button>
+  </div>
+
+  <section aria-labelledby="h-m">
+    <h2 id="h-m">Partido</h2>
+    <div class="matches" id="matches"></div>
+    <div class="row">
+      <div class="seg" role="group" aria-label="Mercado">
+        <button type="button" id="mk1x2" aria-pressed="true">1X2 (90 min)</button>
+        <button type="button" id="mkou" aria-pressed="false">Más/menos 2,5 goles</button>
+      </div>
+      <label>Nombre del partido<input type="text" class="txt" id="mname" style="width:210px"></label>
+      <label>Dinero total (€)<input type="text" id="bank" inputmode="decimal" value="100" style="width:90px"></label>
+      <label>Redondeo (€)<input type="text" id="step" inputmode="decimal" value="1" style="width:70px"></label>
+      <button class="btn" id="addcasa" type="button">+ casa</button>
+      <button class="btn" id="addmatch" type="button">+ partido</button>
+    </div>
+    <div class="scroll"><table class="grid" id="grid"></table></div>
+    <p class="hint">Casas puestas por defecto: las que tienen licencia en España según el registro de la DGOJ. Usa siempre la web .es de cada casa. Sin comisión (casas tradicionales). Mercado 1X2: solo 90 minutos.</p>
+  </section>
+
+  <section aria-labelledby="h-r">
+    <h2 id="h-r">Resultado</h2>
+    <div id="result"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="log" type="button">Anotar en el registro</button>
+      <span class="note" id="logmsg"></span>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-c">
+    <h2 id="h-c">Antes de apostar</h2>
+    <div class="checks" id="checks"></div>
+    <p class="note" id="chk-status" style="margin-top:12px"></p>
+  </section>
+
+  <section aria-labelledby="h-l">
+    <h2 id="h-l">Registro de lo que has mirado</h2>
+    <p class="note">Anota también cuando no hay arbitraje. Si solo apuntas lo bueno, los números salen engañosos. Se guarda en este navegador.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="copy" type="button">Copiar registro (CSV)</button>
+      <button class="btn" id="clear" type="button">Vaciar registro</button>
+      <span class="note" id="loginfo"></span>
+    </div>
+    <div class="scroll"><table id="logtable"></table></div>
+    <textarea id="csvbox" hidden readonly aria-label="Registro en CSV"></textarea>
+  </section>
+
+  <p class="note">Teoría con las cuotas que escribes: no sabe si siguen disponibles ni si la casa te deja apostar ese importe. La Champions es de los mercados con menos diferencias entre casas; lo normal es no encontrar nada, y eso también es un dato útil.</p>
+</main>
+
+<script>
+// CORE-START
+const gcd = (a, b) => { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) { [a, b] = [b, a % b]; } return a; };
+const R = (n, d = 1n) => { if (d < 0n) { n = -n; d = -d; } const g = gcd(n, d) || 1n; return { n: n / g, d: d / g }; };
+const add = (a, b) => R(a.n * b.d + b.n * a.d, a.d * b.d);
+const sub = (a, b) => R(a.n * b.d - b.n * a.d, a.d * b.d);
+const mul = (a, b) => R(a.n * b.n, a.d * b.d);
+const div = (a, b) => R(a.n * b.d, a.d * b.n);
+const cmp = (a, b) => { const x = a.n * b.d - b.n * a.d; return x < 0n ? -1 : x > 0n ? 1 : 0; };
+const ONE = R(1n), ZERO = R(0n);
+function parse(s) {
+  s = String(s).trim().replace(",", ".");
+  if (!/^\d+(\.\d+)?$/.test(s)) return null;
+  const [i, f = ""] = s.split(".");
+  return R(BigInt(i + f), 10n ** BigInt(f.length));
+}
+function fixed(r, p) {
+  const neg = r.n < 0n, n = neg ? -r.n : r.n;
+  const q = (2n * n * 10n ** BigInt(p) + r.d) / (2n * r.d);
+  let s = q.toString().padStart(p + 1, "0");
+  if (p > 0) s = s.slice(0, -p) + "," + s.slice(-p);
+  return (neg && q !== 0n ? "-" : "") + s;
+}
+function effective(odds, k) { return add(ONE, mul(sub(odds, ONE), sub(ONE, k))); }
+function analyse(legs, bank, step) {
+  const e = legs.map(l => effective(l.odds, l.k));
+  const inv = e.map(x => div(ONE, x));
+  const S = inv.reduce(add, ZERO);
+  const arb = cmp(S, ONE) < 0;
+  const ret = sub(div(ONE, S), ONE);
+  const ideal = inv.map(x => div(mul(bank, x), S));
+  let best = null;
+  const cands = ideal.map(a => {
+    const q = div(a, step), lo = q.n / q.d, hi = (q.n + q.d - 1n) / q.d;
+    const set = [...new Set([lo, hi])].filter(v => v > 0n).map(v => mul(R(v), step));
+    return set.length ? set : [step];
+  });
+  (function walk(i, acc) {
+    if (i === cands.length) {
+      const total = acc.reduce(add, ZERO);
+      const pays = acc.map((a, j) => mul(a, e[j]));
+      let mn = pays[0]; for (const p of pays) if (cmp(p, mn) < 0) mn = p;
+      const profit = sub(mn, total), roi = div(profit, total);
+      if (!best || cmp(roi, best.roi) > 0 || (cmp(roi, best.roi) === 0 && cmp(profit, best.profit) > 0))
+        best = { stakes: acc.slice(), pays, total, profit, roi };
+      return;
+    }
+    for (const c of cands[i]) { acc.push(c); walk(i + 1, acc); acc.pop(); }
+  })(0, []);
+  const idealPays = ideal.map((a, j) => mul(a, e[j]));
+  // cuota minima que mantiene S = 1 con las demas fijas
+  const floorOdds = legs.map((l, i) => {
+    const others = sub(S, inv[i]);
+    if (cmp(others, ONE) >= 0) return null;
+    const eStar = div(ONE, sub(ONE, others));
+    const oddsStar = add(ONE, div(sub(eStar, ONE), sub(ONE, l.k)));
+    return oddsStar;
+  });
+  return { S, arb, ret, ideal, idealPays, best, floorOdds };
+}
+// CORE-END
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const eur = r => fixed(r, 2) + " €";
+const STALE_S = 120;
+const CHECKS = [
+  "Es el mismo mercado y el mismo partido en todas las casas.",
+  "He visto cada cuota en la web .es de su casa, hace menos de 2 minutos.",
+  "Las casas liquidan igual si el partido se suspende o se aplaza.",
+  "La casa acepta el importe que me toca en cada resultado.",
+  "Con el redondeo que voy a usar, el beneficio sigue siendo positivo.",
+];
+const MATCHES = [
+  ["Fenerbahçe – Liverpool", "18:45"], ["AEK Atenas – Real Madrid", "18:45"], ["Lens – Como", "21:00"],
+  ["Borussia Dortmund – Real Betis", "21:00"], ["RB Leipzig – Manchester City", "21:00"], ["Porto – Napoli", "21:00"],
+  ["PSV – Brujas", "21:00"], ["Slavia Praga – Arsenal", "21:00"], ["Viking – Sabah", "21:00"],
+];
+let S0 = {
+  matches: MATCHES.map(([name, time], i) => ({ id: "m" + i, name, time })),
+  cur: "m1", mk: "1x2", casas: ["bet365", "Codere", "Sportium", "Retabet", "Luckia"], bank: "100", step: "1", data: {}, log: [],
+};
+let st = S0;
+try { const raw = localStorage.getItem("matriz-v1"); if (raw) st = Object.assign({}, S0, JSON.parse(raw)); } catch (e) { st = S0; }
+function save() { try { localStorage.setItem("matriz-v1", JSON.stringify(st)); } catch (e) {} }
+
+const curMatch = () => st.matches.find(m => m.id === st.cur) || st.matches[0];
+function outcomes() {
+  const m = curMatch(), [h, a] = m.name.split(/\s+[–-]\s+/);
+  return st.mk === "1x2"
+    ? [{ k: "H", lbl: h || "Local" }, { k: "D", lbl: "Empate" }, { k: "A", lbl: a || "Visitante" }]
+    : [{ k: "O", lbl: "Más de 2,5 goles" }, { k: "U", lbl: "Menos de 2,5 goles" }];
+}
+const cellKey = (o, i) => `${curMatch().id}|${st.mk}|${o}|${i}`;
+
+function buildMatches() {
+  $("matches").innerHTML = st.matches.map(m => `<button type="button" data-id="${esc(m.id)}" aria-pressed="${m.id === st.cur}">${esc(m.name)}<small>${esc(m.time)} h</small></button>`).join("");
+  $("matches").querySelectorAll("button").forEach(b => b.addEventListener("click", () => { st.cur = b.dataset.id; save(); buildMatches(); buildGrid(); compute(); $("mname").value = curMatch().name; }));
+}
+function buildGrid() {
+  $("mk1x2").setAttribute("aria-pressed", st.mk === "1x2"); $("mkou").setAttribute("aria-pressed", st.mk === "ou");
+  const os = outcomes();
+  $("grid").innerHTML = `<thead><tr><th>Resultado</th>${st.casas.map((c, i) => `<th><input type="text" class="txt" id="casa${i}" value="${esc(c)}" aria-label="Nombre de la casa ${i + 1}"></th>`).join("")}</tr></thead>
+    <tbody>${os.map(o => `<tr><td class="lbl">${esc(o.lbl)}</td>${st.casas.map((_, i) => {
+      const c = st.data[cellKey(o.k, i)];
+      return `<td><input type="text" inputmode="decimal" id="c_${o.k}_${i}" value="${esc(c ? c.v : "")}" placeholder="—" aria-label="${esc(o.lbl)} en casa ${i + 1}"></td>`;
+    }).join("")}</tr>`).join("")}</tbody>`;
+  $("grid").querySelectorAll("th input").forEach((el, i) => el.addEventListener("input", () => { st.casas[i] = el.value; save(); compute(); }));
+  os.forEach(o => st.casas.forEach((_, i) => $(`c_${o.k}_${i}`).addEventListener("input", e => {
+    st.data[cellKey(o.k, i)] = { v: e.target.value, ts: Date.now() }; save(); compute();
+  })));
+}
+let last = null;
+function compute() {
+  const os = outcomes(), bank = parse(st.bank), step = parse(st.step);
+  const picks = os.map(o => {
+    let best = null;
+    st.casas.forEach((cn, i) => {
+      const c = st.data[cellKey(o.k, i)], odds = c && parse(c.v);
+      if (odds && cmp(odds, ONE) > 0 && (!best || cmp(odds, best.odds) > 0)) best = { odds, casa: cn || "Casa " + (i + 1), ts: c.ts, i };
+    });
+    return { o, best };
+  });
+  os.forEach(o => st.casas.forEach((_, i) => $(`c_${o.k}_${i}`).classList.remove("best")));
+  picks.forEach(p => { if (p.best) $(`c_${p.o.k}_${p.best.i}`).classList.add("best"); });
+  const badSetup = !bank || cmp(bank, ZERO) <= 0 || !step || cmp(step, ZERO) <= 0;
+  last = null;
+  if (badSetup) { $("result").innerHTML = `<p class="msg bad">El dinero total y el redondeo tienen que ser números mayores que 0.</p>`; $("log").disabled = true; updateChecks(false); return; }
+  if (picks.some(p => !p.best)) {
+    const faltan = picks.filter(p => !p.best).map(p => p.o.lbl).join(", ");
+    $("result").innerHTML = `<p class="note">Faltan cuotas para: ${esc(faltan)}. Escribe al menos una cuota por resultado.</p>`;
+    $("log").disabled = true; updateChecks(false); return;
+  }
+  const legs = picks.map(p => ({ odds: p.best.odds, k: ZERO }));
+  const a = analyse(legs, bank, step), b = a.best, now = Date.now();
+  const ages = picks.map(p => Math.round((now - p.best.ts) / 1000));
+  const oldest = Math.max(...ages), stale = oldest > STALE_S;
+  const sameCasa = new Set(picks.map(p => p.best.casa.trim().toLowerCase())).size < picks.length;
+  last = { a, picks, ages, stale, sameCasa, bank, step };
+  $("log").disabled = false;
+  let h = `<div class="verdict"><span class="pill ${a.arb ? "good" : "bad"}">${a.arb ? "Hay arbitraje teórico" : "No hay arbitraje"}</span></div>
+    <div class="metrics"><div class="metric"><span>Suma de probabilidades (S)</span><b>${fixed(a.S, 6)}</b></div>
+    <div class="metric"><span>${a.arb ? "Retorno teórico" : "Margen del conjunto"}</span><b>${fixed(mul(a.arb ? a.ret : sub(a.S, ONE), R(100n)), 2)} %</b></div>`;
+  if (a.arb) h += `<div class="metric"><span>Beneficio tras redondear</span><b>${eur(b.profit)}</b></div><div class="metric"><span>Rentabilidad tras redondear</span><b>${fixed(mul(b.roi, R(100n)), 2)} %</b></div>`;
+  h += `</div>`;
+  if (a.arb && sameCasa) h += `<p class="msg bad">Dos resultados salen de la misma casa. Una casa no se arbitra a sí misma: revisa las cuotas, casi seguro es un error al teclear.</p>`;
+  if (a.arb && cmp(a.ret, R(1n, 10n)) > 0) h += `<p class="msg bad">Retorno de más del 10 %. Es casi seguro un error de cuota o de mercado. Comprueba cada cuota otra vez.</p>`;
+  if (a.arb && stale) h += `<p class="msg warn">Alguna cuota tiene más de ${STALE_S / 60} minutos. Vuelve a mirarla y reescríbela antes de seguir.</p>`;
+  if (a.arb && cmp(b.profit, ZERO) <= 0) h += `<p class="msg bad">Con este redondeo el arbitraje desaparece.</p>`;
+  else if (a.arb && cmp(b.roi, R(1n, 100n)) < 0) h += `<p class="msg warn">Por debajo del 1 % cualquier bajada pequeña de cuota se come el beneficio.</p>`;
+  if (a.arb) {
+    h += `<div class="scroll"><table><thead><tr><th>Resultado</th><th>Casa</th><th class="n">Cuota</th><th class="n">Apuesta</th><th class="n">Cuota puede bajar a</th><th class="n">Edad</th></tr></thead><tbody>` +
+      picks.map((p, i) => `<tr><td>${esc(p.o.lbl)}</td><td>${esc(p.best.casa)}</td><td class="n">${fixed(p.best.odds, 2)}</td><td class="n">${eur(b.stakes[i])}</td><td class="n">${a.floorOdds[i] ? fixed(a.floorOdds[i], 3) : "—"}</td><td class="n ${ages[i] > STALE_S ? "old" : ""}">${ages[i]} s</td></tr>`).join("") +
+      `</tbody><tfoot><tr><td colspan="3"><b>Total apostado</b></td><td class="n"><b>${eur(b.total)}</b></td><td colspan="2" class="n">Cobras como mínimo ${eur(add(b.total, b.profit))}</td></tr></tfoot></table></div>`;
+  }
+  $("result").innerHTML = h; updateChecks(a.arb);
+}
+function buildChecks() {
+  $("checks").innerHTML = CHECKS.map((t, i) => `<label><input type="checkbox" id="chk${i}"><span>${esc(t)}</span></label>`).join("");
+  $("checks").querySelectorAll("input").forEach(el => el.addEventListener("change", () => updateChecks(!!(last && last.a.arb))));
+}
+const doneChecks = () => CHECKS.filter((_, i) => $("chk" + i).checked).length;
+function updateChecks(arb) {
+  const d = doneChecks();
+  $("chk-status").textContent = !arb ? "Primero necesitas un arbitraje teórico."
+    : d === CHECKS.length ? "Las 5 comprobaciones están hechas. Es verificable según lo que tú has comprobado; la calculadora no puede confirmarlo."
+    : `${d} de ${CHECKS.length} comprobaciones hechas. Hasta completarlas, es solo un candidato.`;
+}
+function csvCell(v) { v = String(v); return /[",\n;]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; }
+function toCSV() {
+  const head = ["fecha_hora_utc", "partido", "mercado", "estado", "S", "retorno_teorico_pct", "beneficio_redondeado_eur", "patas_resultado|casa|cuota|edad_s", "comprobaciones"];
+  return [head, ...st.log.map(e => [e.t, e.match, e.market, e.status, e.S, e.ret, e.profit, e.legs, e.checks])].map(r => r.map(csvCell).join(",")).join("\n");
+}
+function buildLog() {
+  $("loginfo").textContent = `${st.log.length} anotaciones`;
+  $("logtable").innerHTML = st.log.length ? `<thead><tr><th>Hora</th><th>Partido</th><th>Mercado</th><th>Estado</th><th class="n">S</th></tr></thead><tbody>` +
+    st.log.slice().reverse().map(e => `<tr><td>${esc(e.t.slice(11, 19))}</td><td>${esc(e.match)}</td><td>${esc(e.market)}</td><td>${esc(e.status)}</td><td class="n">${esc(e.S)}</td></tr>`).join("") + `</tbody>` : "";
+}
+$("log").addEventListener("click", () => {
+  if (!last) return;
+  const { a, picks, ages, stale, sameCasa } = last, d = doneChecks();
+  let status = !a.arb ? "SIN_ARBITRAJE" : sameCasa ? "DESCARTADA_MISMA_CASA" : stale ? "DESCARTADA_CUOTA_ANTIGUA" : cmp(a.best.profit, ZERO) <= 0 ? "DESCARTADA_REDONDEO"
+    : d === CHECKS.length ? "VERIFICADA_SEGUN_USUARIO" : "CANDIDATA";
+  st.log.push({ t: new Date().toISOString(), match: curMatch().name, market: st.mk === "1x2" ? "1X2" : "OU2.5", status, S: fixed(a.S, 6),
+    ret: a.arb ? fixed(mul(a.ret, R(100n)), 2) : "", profit: a.arb ? fixed(a.best.profit, 2) : "",
+    legs: picks.map((p, i) => `${p.o.lbl}|${p.best.casa}|${fixed(p.best.odds, 2)}|${ages[i]}`).join("; "), checks: `${d}/5` });
+  save(); buildLog(); $("logmsg").textContent = "Anotado: " + status;
+});
+$("copy").addEventListener("click", async () => {
+  const csv = toCSV(), box = $("csvbox");
+  try { await navigator.clipboard.writeText(csv); $("loginfo").textContent = "Copiado al portapapeles."; }
+  catch (e) { box.hidden = false; box.value = csv; box.select(); $("loginfo").textContent = "Selecciona y copia el texto de abajo."; }
+});
+$("clear").addEventListener("click", () => { if ($("clear").dataset.sure) { st.log = []; save(); buildLog(); delete $("clear").dataset.sure; $("clear").textContent = "Vaciar registro"; } else { $("clear").dataset.sure = "1"; $("clear").textContent = "Pulsa otra vez para vaciar"; } });
+$("mk1x2").addEventListener("click", () => { st.mk = "1x2"; save(); buildGrid(); compute(); });
+$("mkou").addEventListener("click", () => { st.mk = "ou"; save(); buildGrid(); compute(); });
+$("bank").value = st.bank; $("step").value = st.step;
+$("bank").addEventListener("input", e => { st.bank = e.target.value; save(); compute(); });
+$("step").addEventListener("input", e => { st.step = e.target.value; save(); compute(); });
+$("addcasa").addEventListener("click", () => { if (st.casas.length < 8) { st.casas.push("Casa " + (st.casas.length + 1)); save(); buildGrid(); compute(); } });
+$("addmatch").addEventListener("click", () => {
+  const id = "m" + Date.now(); st.matches.push({ id, name: "Local – Visitante", time: "--:--" }); st.cur = id;
+  save(); buildMatches(); buildGrid(); compute(); $("mname").value = curMatch().name; $("mname").focus(); $("mname").select();
+});
+$("mname").addEventListener("input", e => { curMatch().name = e.target.value || "Partido"; save(); buildMatches(); buildGrid(); compute(); });
+$("theme").addEventListener("click", () => { const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; r.dataset.theme = dark ? "light" : "dark"; });
+buildMatches(); buildChecks(); buildGrid(); buildLog(); $("mname").value = curMatch().name; compute();
+setInterval(() => { if (last) compute(); }, 5000);
+</script>
+
+</html>
